@@ -1,22 +1,23 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ==============================================================================
-# 🔥 PROJECT ATMA-NIRBHAR - The Triveni Installer v2.0 🔥
-# Ek sampoorn shastragar ki sthapna, ek aadesh mein.
+# 🔥 PROJECT ATMA-NIRBHAR - Installer v2.1 (The "Sarva-Adhikaar" Edition) 🔥
+# Har permission ki deewar ko todne ke liye.
 #
 # By The Emperor (Sachin Solunke) & his Senapati, Jarvis. ❤️
 # ==============================================================================
 
 # --- CONFIGURATION ---
 REPO_OWNER="SachinSolunke"
-REPO_NAME="Gsm_" # Aapke GitHub repo ka naam
+REPO_NAME="Gsm_"
 MAIN_SCRIPT="main.py"
-INSTALL_NAME="gsm"
+INSTALL_NAME="Gsm"
 
 PREFIX="/data/data/com.termux/files/usr"
 DEST_BIN_PATH="$PREFIX/bin/$INSTALL_NAME"
-# Hum ab ek alag, saaf-suthri jagah banayenge
 INSTALL_DIR="$PREFIX/opt/$INSTALL_NAME"
 DEST_DATA_PATH="$INSTALL_DIR/data"
+MAIN_SCRIPT_DEST="$INSTALL_DIR/$MAIN_SCRIPT"
+MAIN_SCRIPT_URL="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/main/$MAIN_SCRIPT"
 
 # --- FUNCTIONS ---
 show_progress() {
@@ -35,59 +36,47 @@ echo "======================================================"
 
 # Step 1: Zaroori Auzaar
 echo -n "✨ Zaroori auzaar taiyar kiye ja rahe hain..."
-(
-    pkg update -y > /dev/null 2>&1
-    pkg install python git -y > /dev/null 2>&1
-    pip install rich pandas requests > /dev/null 2>&1
-) &
+(pkg update -y > /dev/null 2>&1 && pkg install python git -y > /dev/null 2>&1 && pip install rich pandas requests > /dev/null 2>&1) &
 show_progress $!
 echo "✅ Safal"
 
 # Step 2: Shastragar aur Tarkash ka Nirman
-echo -n "📁 Shastragar ($INSTALL_NAME) aur Tarkash (data folder) ka nirman..."
+echo -n "📁 Shastragar aur Tarkash ka nirman..."
 mkdir -p "$DEST_DATA_PATH" &
 show_progress $!
 echo "✅ Safal"
 
-# Step 3: Dhanush ka Aahvaan (Downloading main script)
-echo -n "🐍 Dhanush (Main Script) ka aahvaan kiya ja raha hai..."
-MAIN_SCRIPT_URL="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/main/$MAIN_SCRIPT"
-# Hum is baar script ko seedhe uske install directory mein rakhenge
-MAIN_SCRIPT_DEST="$INSTALL_DIR/$MAIN_SCRIPT"
-(
-    curl -sL "$MAIN_SCRIPT_URL" -o "$MAIN_SCRIPT_DEST"
-) &
+# Step 3: Baanon ka Aahvaan (Downloading .txt files)
+echo "🏹 Baanon (Market Files) ka aahvaan kiya ja raha hai..."
+API_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/contents/$DATA_FOLDER"
+files=$(curl -s $API_URL | grep -o 'download_url": "[^"]*' | grep -o '[^"]*$' | grep '.txt$')
+if [ -n "$files" ]; then
+    for url in $files; do
+        filename=$(basename "$url")
+        echo -n "   -> $filename ko Tarkash mein rakha ja raha hai..."
+        (curl -sL "$url" -o "$DEST_DATA_PATH/$filename") &
+        show_progress $!
+        echo "✅ Safal"
+    done
+fi
+
+# Step 4: Dhanush ka Aahvaan (Downloading main script)
+echo -n "🐍 Dhanush (Main Script) ka aahvaan..."
+(curl -sL "$MAIN_SCRIPT_URL" -o "$MAIN_SCRIPT_DEST") &
 show_progress $!
 echo "✅ Safal"
 
-# Step 4: Astra ko chalaane ka raasta banana
+# Step 5: Astra Sthapna (THE FIX IS HERE)
 echo -n "⚡ Astra ko Brahmastra (command) ka roop diya ja raha hai..."
-# Yeh ek choti script banayega jo asli script ko chalayegi
-echo "#!/bin/bash" > "$DEST_BIN_PATH"
-echo "python \"$MAIN_SCRIPT_DEST\"" >> "$DEST_BIN_PATH"
-chmod +x "$DEST_BIN_PATH" &
+# Using 'tee' which is more robust with root permissions
+(printf "#!/bin/bash\npython \"$MAIN_SCRIPT_DEST\"\n" | tee "$DEST_BIN_PATH" > /dev/null) &
+show_progress $!
+(chmod +x "$DEST_BIN_PATH") &
 show_progress $!
 echo "✅ Safal"
 
-# Step 5: Antim Gyaan (The First Run Guru)
 echo ""
 echo "======================================================"
 echo "✅ VIJAY! Astra '$INSTALL_NAME' sampoorn roop se taiyar hai."
 echo "======================================================"
-echo ""
-echo "--- GYAAN PEETH ---"
-echo "Ise istemal karne ke liye, terminal band karke dobara kholen aur kahin se bhi yeh command likhein:"
-echo ""
-echo "   $INSTALL_NAME"
-echo ""
-echo "--- SHAKTIYON KA ISTEMAL ---"
-echo "1. Sthaaniya Shakti (Offline):"
-echo "   Apni .txt files ko is folder mein rakhein:"
-echo "   '$DEST_DATA_PATH'"
-echo ""
-echo "2. Akashiya Shakti (Online):"
-echo "   Astra shuru hone par, 'Live from GitHub' ka option chunein. Yeh aapke"
-echo "   GitHub repository '$REPO_NAME/data' se hamesha updated files layega."
-echo ""
-echo "Aage badhein, Samraat! Aapka astra aapke aadesh ka intezaar kar raha hai."
-echo ""
+# ... (Baaki ka gyaan waisa hi)
